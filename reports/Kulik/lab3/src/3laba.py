@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-# ---------- Вариант 7 ----------
 c_zero, c_one = -4, -9
 
 data = np.array([
@@ -14,54 +13,41 @@ data = np.array([
 X_raw = data[:, :2]
 Y_raw = data[:, 2]
 
-# ---------- Параметры обучения ----------
 lr_rate = {'sigmoid': 0.3, 'relu': 0.13}
 err_limit = 0.01
 max_epochs = 10000
 seeds = [1, 2, 3, 4, 5]
 show_seed = 1
 
-
-# ---------- Активации ----------
 def phi(z):
     """Сигмоида."""
     return 1.0 / (1.0 + np.exp(-np.clip(z, -500, 500)))
-
 
 def dphi(a):
     """Производная сигмоиды по её выходу."""
     return a * (1.0 - a)
 
-
 def relu(z):
     return np.maximum(0.0, z)
-
 
 def drelu(z):
     """Производная ReLU по входу нейрона."""
     return (z > 0).astype(float)
 
-
-# ---------- Шкалы ----------
 def scale(v):
     """Из [c0; c1] в [0; 1]."""
     return (v - c_zero) / (c_one - c_zero)
-
 
 def unscale(v):
     """Из [0; 1] обратно в [c0; c1]."""
     return c_zero + v * (c_one - c_zero)
 
-
 def nearest_class(v):
     return c_zero if abs(v - c_zero) <= abs(v - c_one) else c_one
-
 
 X_in = scale(X_raw)
 T_target = scale(Y_raw)
 
-
-# ---------- Сеть 2-2-1 ----------
 class Net:
     def __init__(self, seed, hidden):
         rng = np.random.default_rng(seed)
@@ -125,26 +111,21 @@ class Net:
         return float(unscale(self.predict_norm(a, b)))
 
     def dead_neurons(self):
-        """Скрытые нейроны ReLU, равные 0 на всех 4 входах."""
         if self.hidden != 'relu':
             return 0
         zh = X_in @ self.Vh + self.Bh
         return int(np.sum(np.all(zh <= 0, axis=0)))
 
     def active_counts(self):
-        """Для каждого скрытого нейрона: на скольких из 4 входов он не равен 0."""
         zh = X_in @ self.Vh + self.Bh
         return [int(c) for c in np.sum(zh > 0, axis=0)]
 
-
-# ---------- Метрики ----------
 def compute_metrics(net):
     preds = np.array([net.predict_real(a, b) for a, b in X_raw])
     classes = np.array([nearest_class(v) for v in preds])
     accuracy = np.mean(classes == Y_raw) * 100
     mae = np.mean(np.abs(preds - Y_raw))
     return accuracy, mae
-
 
 def run_config(hidden, title):
     print(title)
@@ -163,8 +144,6 @@ def run_config(hidden, title):
     print()
     return out
 
-
-# ---------- Графики ----------
 def plot_convergence(net_s, net_r):
     plt.figure(figsize=(10, 6))
     plt.plot(range(1, len(net_s.hist) + 1), net_s.hist,
@@ -180,7 +159,6 @@ def plot_convergence(net_s, net_r):
     plt.grid(True, alpha=0.3)
     plt.tight_layout()
     plt.show()
-
 
 def plot_epochs(res_s, res_r):
     plt.figure(figsize=(10, 6))
@@ -201,7 +179,6 @@ def plot_epochs(res_s, res_r):
     plt.grid(True, alpha=0.3, axis='y')
     plt.tight_layout()
     plt.show()
-
 
 def plot_surfaces(net_s, net_r):
     fig, axes = plt.subplots(1, 2, figsize=(14, 6))
@@ -229,7 +206,6 @@ def plot_surfaces(net_s, net_r):
     plt.tight_layout()
     plt.show()
 
-
 def plot_mae(mae_s, mae_r):
     fig, ax = plt.subplots(figsize=(8, 6))
     bars = ax.bar(['Sigmoid', 'ReLU'], [mae_s, mae_r],
@@ -243,8 +219,6 @@ def plot_mae(mae_s, mae_r):
     plt.tight_layout()
     plt.show()
 
-
-# ---------- Вывод ----------
 def print_summary(res_s, res_r):
     print("Результаты (среднее по 5 запускам):")
     for name, r in [("Sigmoid", res_s), ("ReLU", res_r)]:
@@ -256,7 +230,6 @@ def print_summary(res_s, res_r):
     print("Активность скрытых нейронов ReLU (число входов из 4, где нейрон != 0):")
     for s, net, ok in zip(seeds, res_r['nets'], res_r['reached']):
         print(f"  seed={s}: {net.active_counts()} | Ee достигнут: {'да' if ok else 'нет'}")
-
 
 def print_predictions(net, title):
     print(f"\nПредсказания {title}")
@@ -271,7 +244,6 @@ def print_predictions(net, title):
         real = unscale(norm)
         print(f"({a:5.1f},{b:5.1f}) | y_norm={norm:.4f} | y={real:7.3f} | "
               f"class={nearest_class(real):5.0f}")
-
 
 def run_interactive(net):
     print("\n=== Режим функционирования (ReLU) ===")
@@ -294,7 +266,6 @@ def run_interactive(net):
         print(f"Выход в шкале [c0; c1]: {real:.4f}")
         print(f"Класс: {nearest_class(real):g}")
 
-
 def main():
     print("Лабораторная работа №3")
     print(f"Вариант 7: c0 = {c_zero}, c1 = {c_one}\n")
@@ -313,9 +284,7 @@ def main():
     plot_epochs(res_s, res_r)
     plot_surfaces(net_s, net_r)
     plot_mae(res_s['maes'][i], res_r['maes'][i])
-
     run_interactive(net_r)
-
 
 if __name__ == "__main__":
     main()
